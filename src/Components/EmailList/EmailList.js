@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useState} from "react";
 import { getHeader, isEmpty, decodeHtml, removeQuote } from "../Helper";
 import PropTypes from "prop-types";
 import {
@@ -8,19 +8,46 @@ import {
   InputGroup,
   InputLeftElement,
   Icon,
+  IconButton,
   Avatar,
   Text,
   Spinner,
+  Button
 } from "@chakra-ui/core";
 
-const EmailList = ({ getOneMessage, messages }) => {
+
+const EmailList = ({ getOneMessage, messages,loadMore,getMessagesQuery  }) => {
   const handleMessageClick = (e) => {
     const messageId = e.currentTarget.getAttribute("id");
     getOneMessage(messageId);
+    //console.log(messageId);
   };
+  const handlequery = () => {
+    
+    getMessagesQuery(query);
+    setState({query:''})
+    //console.log(messageId);
+  };
+  
+  const [state, setState] = useState({
+    query: '',
+});
+
+const { query } = state;
+
+// onchange event handler
+const handleChange = name => event => {
+    // console.log('name', name, 'event', event.target.value);
+    setState({ ...state, [name]: event.target.value });
+    var query = event.target.value;
+    console.log(query)
+};
+  
+  
 
   return (
     <Flex
+      
       direction='column'
       wrap='no-wrap'
       w='26%'
@@ -31,15 +58,16 @@ const EmailList = ({ getOneMessage, messages }) => {
       {/* Search bar */}
       <Box py='5px' bg='white' border='1px' borderColor='gray.200'>
         <InputGroup size='lg'>
-          <InputLeftElement
-            children={<Icon name='search' color='gray.300' />}
-          />
+        <IconButton variant='outline' marginLeft="5px" variantColor="blue" aria-label="Search database" icon="search" onClick={handlequery} />
           <Input
             type='text'
+            marginLeft="5px"
             placeholder='Search mail'
             borderWidth='0px'
             borderRadius='0px'
             focusBorderColor='white'
+            onChange={handleChange('query')}
+            value={query}
           />
         </InputGroup>
       </Box>
@@ -71,6 +99,7 @@ const EmailList = ({ getOneMessage, messages }) => {
                 key={message.id}
                 id={message.id}
                 onClick={handleMessageClick}
+                
                 wrap='no-wrap'
                 justify='space-around'
                 py={2}
@@ -100,6 +129,12 @@ const EmailList = ({ getOneMessage, messages }) => {
               </Flex>
             );
           })}
+           <Button width="100%"
+              variantColor='teal'
+              variant='outline'
+              onClick={() => loadMore()}>
+              Load More...
+            </Button>
         </Box>
       )}
     </Flex>
@@ -109,6 +144,7 @@ const EmailList = ({ getOneMessage, messages }) => {
 export default EmailList;
 
 EmailList.prototype = {
+  
   getOneMessage: PropTypes.func.isRequired,
   messages: PropTypes.array.isRequired,
 };

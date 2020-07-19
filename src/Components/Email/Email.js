@@ -14,6 +14,11 @@ import {
   Text,
   useToast,
 } from "@chakra-ui/core";
+import filesize from 'filesize'
+import {ButtonGroup} from 'react-bootstrap';
+import {saveAs} from 'file-saver';
+import { Icon } from "@chakra-ui/core";
+
 
 const Email = ({ message }) => {
   const headers = isEmpty(message) ? [] : message.payload.headers;
@@ -22,6 +27,7 @@ const Email = ({ message }) => {
   React.useEffect(() => {
     if (!isEmpty(message)) {
       addToFrame(message);
+    
     }
     // eslint-disable-next-line
   }, [message]);
@@ -103,10 +109,28 @@ const Email = ({ message }) => {
 
   const addToFrame = (message) => {
     let ifrm = document.getElementById("iframe").contentWindow.document;
-    ifrm.body.innerHTML = getMessageBody(message.payload);
+   // let ifrm1 = document.getElementById("iframe1").contentWindow.document;
+   ifrm.body.innerHTML = getMessageBody(message.payload);
+   // ifrm1.body.innerHTML = getAttachments(message.payload);
   };
-
+ 
+  const getAttachments = (message) => {
+    let attachments = [];
+    if (typeof message.payload.parts !== 'undefined') {
+      for (let i = 0; i < message.payload.parts.length; i++) {
+        const part = message.payload.parts[i];
+        if (typeof part.body.attachmentId !== 'undefined') {
+          attachments.push(part);
+          
+         
+        }
+      }
+    }
+    return attachments;
+  };
+  
   const getMessageBody = (message) => {
+    
     const encodedBody =
       typeof message.parts === "undefined"
         ? message.body.data
@@ -116,23 +140,52 @@ const Email = ({ message }) => {
   };
 
   const getHTMLPart = (arr) => {
-    for (var x = 0; x <= arr.length; x++) {
-      if (typeof arr[x].parts === "undefined") {
-        if (arr[x].mimeType === "text/html") {
-          return arr[x].body.data;
-        }
-      } else {
-        return getHTMLPart(arr[x].parts);
+  let htmlPart = '';
+  let plainPart = '';
+  for (let x = 0; x < arr.length; x++) {
+    if (typeof arr[x].parts === 'undefined') {
+      if (arr[x].mimeType === 'text/html') {
+        htmlPart = arr[x].body.data;
+      } else if (arr[x].mimeType === 'text/plain') {
+        plainPart = arr[x].body.data;
       }
+    } else {
+      return getHTMLPart(arr[x].parts);
     }
-    return "";
-  };
+  }
+  return htmlPart !== '' ? htmlPart : plainPart;
+};
 
+const downloadAttachment = (messageId,part) =>{
+  window.gapi.client.gmail.users.messages.attachments.get({
+    userId: 'me',
+    messageId,
+    id: part.body.attachmentId
+  }).execute((response) => {
+    let byteString = atob(response.data.replace(/-/g, '+').replace(/_/g, '/'));
+
+    let ab = new ArrayBuffer(byteString.length);
+    let ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+
+    let blob = new Blob([ia], {type: part.mimeType});
+
+    saveAs(blob, part.filename);
+  })
+};
+
+
+
+ 
   return (
     <Flex
       direction='column'
       wrap='no-wrap'
       w='58%'
+     
+     
       h='100%'
       p='0.6rem 1rem'
       bg='white'
@@ -150,6 +203,7 @@ const Email = ({ message }) => {
             <ForwardModel
               forwardData={message}
               getMessageBody={getMessageBody}
+              getAttachments={getAttachments}
             />
             <Button
               rightIcon={MdArchive}
@@ -174,14 +228,14 @@ const Email = ({ message }) => {
             className='mailContainer'
             flexGrow='2'
             direction='column'
-            wrap='no-wrap'
+            wrap='wrap'
             p={2}
           >
-            <Box className='mailHeader' mb={2}>
-              <Text fontSize='lg' fontWeight='bold' color='gray.700' mb={1}>
+            <Box wordBreak="break-word" className='mailHeader' mb={2}>
+              <Text  fontSize='lg' fontWeight='bold' color='gray.700' mb={1}>
                 {getHeader(headers, "Subject")}
               </Text>
-              <Flex wrap='no-wrap' justify='flex-start'>
+              <Flex wrap='wrap' justify='flex-start'>
                 <Avatar
                   name={removeQuote(getHeader(headers, "From").split("<")[0])}
                   src='https://bit.ly/tioluwani-kolawole'
@@ -208,6 +262,51 @@ const Email = ({ message }) => {
               </AspectRatioBox>
             </Box>
           </Flex>
+          {!isEmpty(message)}
+          
+          
+          <Box
+          marginBottom="50px"
+      bg='white'
+      color='black'
+      border='1px'
+      borderColor='gray.200'
+      borderTopRightRadius='md'
+      borderBottomRightRadius='md'> 
+              {message.payload.parts && message.payload.parts.length > 0 ?  
+                
+                message.payload.parts.length?  ( 
+                  <Text fontSize="xl"> 
+                    <ButtonGroup vertical>
+                      {message.payload.parts.slice(1).map((part, index) => (
+                        
+                        part.filename ? (
+                            <Button  
+                            rightIcon='download'
+                            marginBottom="10px"
+                            variantColor='blue'
+                            variant='outline'
+                          key={index}
+                          onClick={() => downloadAttachment(message.id, part)}
+                        > 
+                           
+                         {part.filename}
+                          ({filesize(part.body.size)})
+                         
+                        </Button>)
+                        : null
+                      ))}
+                    </ButtonGroup>
+                    </Text>
+                        ) :
+                (
+                  null
+                )
+                     : ("")}
+                    
+        </Box>
+       
+        
         </Fragment>
       )}
     </Flex>

@@ -4,13 +4,16 @@ import MailboxList from "./Components/MailboxList/MailboxList";
 import EmailList from "./Components/EmailList/EmailList";
 import Email from "./Components/Email/Email";
 
+import {markMessageAsRead} from "./Components/Helper";
 import { ThemeProvider, CSSReset, Button, Flex } from "@chakra-ui/core";
 
+var a;
 const App = () => {
   // const [labels, setlabels] = useState([]); // Todo - sort labels dynamically
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState({});
-
+  const [mailLimit, setMailLimit] = useState(30);
+  const [categoryId,setcategoryId] = useState("INBOX");
   useEffect(() => {
     window.gapi.load("client:auth2", {
       callback: () => {
@@ -40,7 +43,7 @@ const App = () => {
 
   const handleAuthResult = (authResult) => {
     if (authResult && !authResult.error) {
-      console.log("Sign-in successful");
+      //console.log("Sign-in successful");
       hideAuthBtn();
       loadClient();
     } else {
@@ -72,7 +75,7 @@ const App = () => {
   const loadClient = () => {
     return window.gapi.client.load("gmail", "v1").then(
       (res) => {
-        console.log("gapi client loaded for API");
+      //  console.log("gapi client loaded for API");
         getMessages();
       },
       (err) => {
@@ -87,11 +90,13 @@ const App = () => {
     const request = window.gapi.client.gmail.users.messages.list({
       userId: "me",
       labelIds: labelIds,
-      maxResults: 20,
+      maxResults: mailLimit,
+     
     });
-
+    if(categoryId != labelIds)
+    setMailLimit(30);
+    setcategoryId(labelIds); 
     setMessages([]);
-
     // Send Id list to getMessagesData to get Message Data foreach Id
     request.execute(getMessagesData);
   };
@@ -104,6 +109,7 @@ const App = () => {
         .get({
           userId: "me",
           id: message.id,
+         
         })
         .then(
           (response) => {
@@ -116,6 +122,37 @@ const App = () => {
     });
   };
 
+  const getMessagesQuery = (query) => {
+    // Get List of 20 message's Id
+    const request = window.gapi.client.gmail.users.messages.list({
+      userId: "me",
+      q:query
+    });
+
+
+    setMessages([]);
+
+    // Send Id list to getMessagesData to get Message Data foreach Id
+    request.execute(getMessagesData);
+  };
+
+  
+
+  const loadMore = () => {
+    setMailLimit(mailLimit+20);
+   
+    getMessages(categoryId);
+    
+    
+  }
+ 
+
+  const resetstate = () => {
+    setMailLimit(30);
+    console.log("it is reset" +mailLimit);
+  }
+ 
+
   const getOneMessage = (messageId) => {
     window.gapi.client.gmail.users.messages
       .get({
@@ -125,12 +162,15 @@ const App = () => {
       .then(
         (response) => {
           setMessage(response.result);
+          markMessageAsRead(messageId);
         },
         (err) => {
           console.error("getMessage error", err);
         }
       );
   };
+
+  
 
   return (
     <Fragment>
@@ -155,9 +195,10 @@ const App = () => {
           bg='#e5f4f1'
           color='white'
         >
-          <MailboxList getMessages={getMessages} />
-          <EmailList getOneMessage={getOneMessage} messages={messages} />
+          <MailboxList getMessages={getMessages} resetstate={resetstate} getMessagesQuery={getMessagesQuery} />
+          <EmailList getOneMessage={getOneMessage} loadMore={loadMore}  messages={messages} getMessagesQuery={getMessagesQuery}/>
           <Email message={message} />
+          
         </Flex>
       </ThemeProvider>
     </Fragment>

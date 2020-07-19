@@ -32,3 +32,14 @@ export const formatDate = (strDate) => {
   };
   return new Intl.DateTimeFormat("en-US", options).format(date);
 };
+
+export const markMessageAsRead = (messageId) => {
+  window.gapi.client.gmail.users.messages.modify({
+    userId: 'me',
+    id: messageId,
+    resource: {
+      addLabelIds: [],
+      removeLabelIds: ['UNREAD']
+    }
+  }).execute();
+};

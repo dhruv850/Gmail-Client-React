@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React, { Fragment,useState } from "react";
 import { Base64 } from "js-base64";
 import { BsPlusCircle } from "react-icons/bs";
 import {
@@ -15,9 +15,20 @@ import {
   Textarea,
   useToast,
   useDisclosure,
+  Box,
+  Text,
 } from "@chakra-ui/core";
+import {FormGroup,ListGroup,ListGroupItem} from "react-bootstrap";
+import Dropzone from 'react-dropzone';
+import { render } from "react-dom";
+import { Form } from "react-bootstrap";
+import filesize from 'filesize'
+
 
 const SendModel = () => {
+  const [attachments,setattachments] = useState([]);
+  const [dropzoneActive,setdropzoneActive] = useState(false);
+
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
@@ -35,27 +46,95 @@ const SendModel = () => {
         Subject: subject,
       },
       message,
-      displayToast
+      displayToast,
+      attachments,
+      
     );
 
     onClose();
   };
+ 
+  var onDrop = (files) => {
+    setdropzoneActive({dropzoneActive: false});
+    for (let i = 0; i < files.length; i++) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setattachments((attachments) => 
+          [
+            ...attachments,
+            {
+              name: files[i].name,
+              size: files[i].size,
+              type: files[i].type,
+              blob: reader.result
+            }
+          ]
+        )
+      };
+      reader.readAsBinaryString(files[i]);
+    }
+  }
 
+ var removeAttachment =(file) => {
+    setattachments(
+      attachments.filter(item => item !== file)
+    )
+  }
+  
+ 
   const sendMessage = (headers_obj, message, callback) => {
-    let email = "";
+    let email = [
+      'Content-Type: multipart/mixed; boundary="my_boundary"',
+      'MIME-Version: 1.0'
+    ];
+    for (let h in headers_obj) {
+      email.push(`${h}: ${headers_obj[h]}`)
+    }
 
-    for (var header in headers_obj)
-      email += header += ": " + headers_obj[header] + "\r\n";
+    email.push(
+      '',
+      '--my_boundary'
+    );
 
-    email += "\r\n" + message;
+    if(!/^\s*$/.test(message)) {
+      email.push(
+        'Content-Type: text/plain; charset="UTF-8"',
+        'MIME-Version: 1.0',
+        'Content-Transfer-Encoding: 7bit',
+        '',
+        `${message}`,
+        '',
+        '--my_boundary'
+      )
+    }
 
-    const base64EncodedEmail = Base64.encodeURI(email);
+    if (attachments.length > 0) {
+      for (let i = 0; i < attachments.length; i++) {
+        email.push(
+          `Content-Type: ${attachments[i].type}`,
+          'MIME-Version: 1.0',
+          'Content-Transfer-Encoding: base64',
+          `Content-Disposition: attachment; filename="${attachments[i].name}"`,
+          '',
+          btoa(attachments[i].blob),
+          '',
+          '--my_boundary'
+        )
+      }
+    }
+
+    const encode = (s) => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+    email = encode(email.join('\r\n') + '--');
+
+    
     const request = window.gapi.client.gmail.users.messages.send({
       userId: "me",
       resource: {
-        raw: base64EncodedEmail,
+        raw: email,
       },
     });
+    setattachments([]);
     request.execute(callback);
   };
 
@@ -78,8 +157,23 @@ const SendModel = () => {
       });
     }
   };
+  var dropzoneRef;
 
+  const dropzoneOverlayStyle = {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    padding: '2.5em 0',
+    
+    textAlign: 'center',
+    
+  };
+  
+ 
   return (
+      
     <Fragment>
       <Button
         w='100%'
@@ -98,9 +192,10 @@ const SendModel = () => {
       </Button>
       <Modal
         isOpen={isOpen}
-        size='xl'
+        size='full'
         onClose={onClose}
         closeOnOverlayClick={false}
+        padding="10px 10px 10px 10px"
       >
         <ModalOverlay />
         <ModalContent>
@@ -132,9 +227,57 @@ const SendModel = () => {
                   resize='vertical'
                 />
               </FormControl>
-            </ModalBody>
+              <FormGroup>
+                <Box >
+              <Dropzone
 
+              disableClick
+              style={{position: "relative"}}
+              onDrop={onDrop}
+              onDragEnter={() => setdropzoneActive({dropzoneActive: true})}
+              onDragLeave={() => setdropzoneActive({dropzoneActive: false})}
+              ref={(node) => {
+                dropzoneRef = node;
+              }}
+            > 
+             {attachments.length>0? (""):(<div style={dropzoneOverlayStyle}>
+            You can also Drop Files Here
+            </div>)}
+            </Dropzone>
+            </Box>
+            </FormGroup>
+            <ListGroup >
+               <Text fontSize="xl">Attachments:</Text>
+               <Box marginTop="10px" >
+            {attachments.map((file, index) => (
+              <Text as="ins" marginTop="3px" >
+              <ListGroupItem  key={index} listItem={true}>
+                {file.name} ({filesize(file.size)})
+                <Button
+                  onClick={() => removeAttachment(file)}
+                  className='btn-link badge close'
+                >
+                  &times;
+                </Button>
+              </ListGroupItem>
+               </Text>
+            )
+           
+            )}
+            </Box>
+          </ListGroup>
+         
+
+            </ModalBody>
+            
             <ModalFooter>
+              
+            <Button variantColor='blue' mr={3} variant="outline" onClick={() => {
+              dropzoneRef.open()
+            }}>
+              Attach Files
+            </Button>
+           
               <Button type='reset' variantColor='blue' mr={3} onClick={onClose}>
                 Close
               </Button>
@@ -147,6 +290,7 @@ const SendModel = () => {
       </Modal>
     </Fragment>
   );
+
 };
 
 export default SendModel;

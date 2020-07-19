@@ -1,21 +1,36 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import SendModel from "./SendModel";
 import PropTypes from "prop-types";
 import { Button, Box, List, ListItem } from "@chakra-ui/core";
 import { MdLabel, MdStar, MdPeople, MdLoyalty, MdInbox } from "react-icons/md";
 import { FiSend, FiFile } from "react-icons/fi";
 
-const MailboxList = ({ getMessages }) => {
+const MailboxList = ({ getMessages,resetstate,getMessagesQuery}) => {
   const [active, setActive] = useState("INBOX");
-
+ 
   const handleClick = (e) => {
+    e.preventDefault();
     const categoryId = e.target.id;
     setActive(categoryId);
-
+    resetstate();
     // Get Messages using clicked category
     getMessages(categoryId);
+    
   };
 
+  const handleClickunread = (e) => {
+    e.preventDefault();
+    const categoryId = e.target.id;
+    setActive(categoryId);
+    resetstate();
+    // Get Messages using clicked category
+    getMessagesQuery(categoryId);
+    
+  };
+
+
+
+ 
   return (
     <Box
       w='16%'
@@ -48,6 +63,23 @@ const MailboxList = ({ getMessages }) => {
           >
             Inbox
           </Button>
+          <ListItem>
+          <Button
+            id='is:unread'
+            w='100%'
+            h='45px'
+            py={2}
+            pl={8}
+            leftIcon={MdStar}
+            variantColor='blue'
+            variant={active === "is:unread" ? "solid" : "ghost"}
+            justifyContent='flex-start'
+            onClick={handleClickunread}
+          >
+            Unread
+          </Button>
+        </ListItem>
+          
         </ListItem>
         <ListItem>
           <Button
@@ -168,6 +200,7 @@ const MailboxList = ({ getMessages }) => {
 
 MailboxList.prototype = {
   getMessages: PropTypes.func.isRequired,
+  resetstate: PropTypes.func.isRequired,
 };
 
 export default MailboxList;
