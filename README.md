@@ -1,8 +1,10 @@
 # CubeMail [![Build Status](https://img.shields.io/github/license/KhalidLam/Gmail-App-React)](https://github.com/KhalidLam/Gmail-App-React/blob/master/LICENSE)
 
-CubeMail is a webmail client built using [Create-React-App](https://github.com/facebook/create-react-app) and [Chakra UI](https://github.com/chakra-ui/chakra-ui/), It runs completely in the browser and uses the [Gmail's public Javascript API](https://developers.google.com/gmail/api/).
+![alt text](https://github.com/KhalidLam/CubeMail/blob/master/screenshot.jpg?raw=true)
 
-Try it out at: https://khalidlam.github.io/CubeMail/
+CubeMail is a webmail-client built using [Create-React-App](https://github.com/facebook/create-react-app) and [Chakra UI](https://github.com/chakra-ui/chakra-ui/), It runs completely in the browser and uses the [Gmail's public Javascript API](https://developers.google.com/gmail/api/).
+
+Try it out at https://khalidlam.github.io/CubeMail/
 
 ## How does it work? 
 The account sign-in and authentication process is **totally managed by Gmail's secure protocols**. The workflow is as follows:
@@ -43,10 +45,11 @@ The account sign-in and authentication process is **totally managed by Gmail's s
 
 ## Todo
 
-- Make App responsive
-- Add Search Feature
-- Display user's Labels
-- Add Animation on Buttons
+- [ ] Make App responsive
+- [ ] Add Search Feature
+- [ ] Display user's Labels
+- [ ] Add Animation on Buttons
+- [ ] Add Infinite scrolling
 
 ### License:
 
