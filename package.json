@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Gmail React App using JavaScript Gmail API",
   "main": "index.js",
-  "homepage": "",
+  "homepage": "http://dhruv850.github.io/Gmail-Client-React",
   "scripts": {
     "start": "react-scripts start",
     "predeploy": "npm run build",
