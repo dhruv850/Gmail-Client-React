@@ -71,14 +71,10 @@ const App = () => {
       handleAuthResult
     );
   };
-  const handleSignout = () => {
-    var auth2 = window.gapi.auth2.getAuthInstance();
-    auth2.signOut().then(function () {
-      console.log('User signed out.');
-    });
-  }
+ 
 
   const loadClient = () => {
+    console.log(window.gapi.client);
     return window.gapi.client.load("gmail", "v1").then(
       (res) => {
       //  console.log("gapi client loaded for API");
@@ -190,15 +186,6 @@ const App = () => {
           onClick={handleAuthClick}
         >
           Authorize
-        </Button>
-        <Button
-          id='authSignOutBtn'
-          display='block'
-          variantColor='teal'
-          variant='outline'
-          onClick={handleSignout}
-        >
-          SignOut
         </Button>
         <Flex
           h='100vh'
