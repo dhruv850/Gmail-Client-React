@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Gmail React App using JavaScript Gmail API",
   "main": "index.js",
-  "homepage": "https://KhalidLam.github.io/CubeMail",
+  "homepage": "",
   "scripts": {
     "start": "react-scripts start",
     "predeploy": "npm run build",
@@ -11,7 +11,7 @@
     "build": "react-scripts build",
     "test": "react-scripts start"
   },
-  "author": "Khalid Lam",
+  "author": "Dhruv Patel and Khalid Lam",
   "license": "ISC",
   "devDependencies": {
     "gh-pages": "^3.0.0"

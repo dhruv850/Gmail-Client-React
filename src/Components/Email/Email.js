@@ -120,9 +120,7 @@ const Email = ({ message }) => {
       for (let i = 0; i < message.payload.parts.length; i++) {
         const part = message.payload.parts[i];
         if (typeof part.body.attachmentId !== 'undefined') {
-          attachments.push(part);
-          
-         
+          attachments.push(part);  
         }
       }
     }
